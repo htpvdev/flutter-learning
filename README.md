@@ -1,6 +1,7 @@
 # Flutter 学習まとめ
 
 - Flutterとは、スマホアプリ(iOS/Android)を作るためのフレームワーク。言語はDart。
+- Flutterでアプリ開発をするためには、Flutter SDKというプログラムをインストールする必要がある。
 
 ## 環境構築
 
@@ -12,7 +13,7 @@
 ### 環境構築 - Windows編
 
 - 全体の流れとしては、flutterと無関係のChocolateyというコマンドラインツールをインストールして、その機能を使いFVMをインストールする。
-(F)
+(FVMと、Flutter SDKにはDart SDKが必要なので一緒にインストールされる)
 
 1. Chocolateyのインストール
   - [公式サイト](https://chocolatey.org/install#individual)の手順に沿って行う。
