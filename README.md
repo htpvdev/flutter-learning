@@ -53,6 +53,14 @@
   - 以下のコマンドを実行する。homebrewが未インストールであればインストールしてから行う。  
   `brew tap leoafarias/fvm`  
   `brew install fvm`  
+2. Xcodeのインストール
+  - iOSエミュレータなどが入っている「Xcode」というアプリをAppStoreからインストールする。
+  - 以下のコマンドを実行する。エミュレータのライセンス等に関する許諾をするコマンド。  
+  `sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer`  
+  `sudo xcodebuild -runFirstLaunch`  
+3. cocoapodsのインストール
+  - 以下のコマンドを実行する。cocoapodsは、iOSアプリ開発のライブラリ管理ツールとのこと。([参考記事](https://tech-begin.com/programming-coding/ios/about-cocoapods/))  
+  `brew install cocoapods`
 
 ### 診断コマンド flutter doctor
 
