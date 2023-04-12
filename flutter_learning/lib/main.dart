@@ -1,115 +1,254 @@
 import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(HomePage());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class HomePage extends StatelessWidget {
+  final TextEditingController _textEditingController = TextEditingController();
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('カラオケ点数ランキング'),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextField(
+                controller: _textEditingController,
+                decoration: InputDecoration(
+                  hintText: '曲名を入力してください',
+                ),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ScoreListPage()),
+                  );
+                },
+                child: Text('点数一覧ページに遷移'),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  _showScoreInputDialog(context);
+                },
+                child: Text('点数を入力'),
+              ),
+            ],
+          ),
+        ),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    );
+  }
+
+//   void _showScoreInputDialog(BuildContext context) {
+//   int _score;
+
+//   showDialog(
+//     context: context,
+//     builder: (BuildContext context) {
+//       return AlertDialog(
+//         title: Text('点数を入力'),
+//         content: TextField(
+//           decoration: InputDecoration(
+//             hintText: '点数を入力してください',
+//           ),
+//           keyboardType: TextInputType.number,
+//           onChanged: (value) {
+//             _score = int.tryParse(value);
+//           },
+//         ),
+//         actions: [
+//           TextButton(
+//             onPressed: () {
+//               Navigator.of(context).pop();
+//             },
+//             child: Text('キャンセル'),
+//           ),
+//           ElevatedButton(
+//             onPressed: () async {
+//               final songName = _textEditingController.text;
+//               final createdAt = DateTime.now();
+//               final score = Score(
+//                 songName: songName,
+//                 score
+//             score: _score,
+//             createdAt: createdAt,
+//           );
+//           await ScoreDatabaseHelper.insertScore(score);
+//           _textEditingController.clear();
+//           Navigator.of(context).pop();
+//         },
+//         child: Text('OK'),
+//       ),
+//     ],
+//   );
+// },
+
+  void _showScoreInputDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('点数を入力'),
+          content: TextField(
+            decoration: InputDecoration(
+              hintText: '点数を入力してください',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('キャンセル'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // 点数を保存する処理
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+// class ScoreListPage extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text('点数一覧ページ'),
+//       ),
+//       body: Center(
+//         child: Text('ここに点数一覧が表示されます。'),
+//       ),
+//     );
+//   }
+// }
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
+class Score {
+  final int id;
+  final String songName;
+  final int score;
+  final DateTime createdAt;
 
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+  Score({this.id, this.songName, this.score, this.createdAt});
 
-  final String title;
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'song_name': songName,
+      'score': score,
+      'created_at': createdAt.millisecondsSinceEpoch,
+    };
+  }
 
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  static Score fromMap(Map<String, dynamic> map) {
+    return Score(
+      id: map['id'],
+      songName: map['song_name'],
+      score: map['score'],
+      createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']),
+    );
+  }
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class ScoreDatabaseHelper {
+  static final String _tableName = 'scores';
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+  static Future<Database> _openDatabase() async {
+    return openDatabase(
+      join(await getDatabasesPath(), 'score_database.db'),
+      onCreate: (db, version) {
+        return db.execute(
+          'CREATE TABLE $_tableName(id INTEGER PRIMARY KEY, song_name TEXT, score INTEGER, created_at INTEGER)',
+        );
+      },
+      version: 1,
+    );
+  }
+
+  static Future<void> insertScore(Score score) async {
+    final db = await _openDatabase();
+    await db.insert(
+      _tableName,
+      score.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  static Future<List<Score>> getAllScores() async {
+    final db = await _openDatabase();
+    final List<Map<String, dynamic>> maps = await db.query(_tableName);
+    return List.generate(maps.length, (i) {
+      return Score.fromMap(maps[i]);
     });
+  }
+}
+
+class ScoreListPage extends StatefulWidget {
+  const ScoreListPage({Key key}) : super(key: key);
+
+  @override
+  _ScoreListPageState createState() => _ScoreListPageState();
+}
+
+class _ScoreListPageState extends State<ScoreListPage> {
+  Future<List<Score>> _scoreListFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _scoreListFuture = ScoreDatabaseHelper.getAllScores();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text('点数一覧'),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
+      body: FutureBuilder<List<Score>>(
+        future: _scoreListFuture,
+        builder: (BuildContext context, AsyncSnapshot<List<Score>> snapshot) {
+          if (snapshot.hasData) {
+            final scoreList = snapshot.data;
+            return ListView.builder(
+              itemCount: scoreList.length,
+              itemBuilder: (BuildContext context, int index) {
+                final score = scoreList[index];
+                return ListTile(
+                  title: Text(score.songName),
+                  subtitle: Text(score.score.toString()),
+                  trailing:
+                      Text(DateFormat.yMd().add_Hm().format(score.createdAt)),
+                );
+              },
+            );
+          } else if (snapshot.hasError) {
+            return Center(
+              child: Text('エラーが発生しました'),
+            );
+          } else {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

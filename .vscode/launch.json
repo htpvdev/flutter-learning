@@ -1,10 +1,12 @@
 {
   "version": "0.2.0",
   "configurations": [
+
     {
       "name": "Dart",
       "type": "dart",
       "request": "launch",
+      "program": "${workspaceFolder}/flutter_learning/lib/main.dart"
     }
   ]
 }
