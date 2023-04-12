@@ -1,19 +1,10 @@
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Flutter Debug-Development",
-      "request": "launch",
+      "name": "Dart",
       "type": "dart",
-      "program": "flutter_learning/lib/main.dart",
-      "args": [
-          "--debug",
-          "--flavor",
-          "development",
-      ]
+      "request": "launch",
     }
   ]
 }
